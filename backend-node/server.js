@@ -1,24 +1,8 @@
-const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./swagger');
+const path = require("path");
+const app = require("./app")
+
 require("dotenv").config();
-
-const taskRoutes = require("./routes/taskRoutes");
-
-const app = express();
-
-// Middleware
-app.use(cors('*'));
-app.use(express.json());
-
-// Routes
-app.use("/api/tasks", taskRoutes);
-
-//swagger- link
-
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Connect to DB & Start Server
 mongoose

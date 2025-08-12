@@ -1,0 +1,84 @@
+version: '1.0'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: task_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: manager
+      MYSQL_DATABASE: backend_laravel
+      MYSQL_USER: userroot
+      MYSQL_PASSWORD: manager
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:8
+    container_name: task_mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/taskdb
+
+  backend-laravel:
+    build:
+      context: ./backend-laravel
+      dockerfile: Dockerfile
+    container_name: backend_laravel
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mysql
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: backend_laravel
+      DB_USERNAME: root
+      DB_PASSWORD: manager
+      JWT_SECRET: 
+    volumes:
+      - ./backend-laravel:/var/www/html
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  backend-node:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+    container_name: backend_node
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/taskdb
+      JWT_SECRET: 
+      PORT: 3001
+    volumes:
+      - ./backend-node:/usr/src/app
+    command: npm start
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend-laravel
+      - backend-node
+    volumes:
+      - ./frontend:/usr/src/app
+    command: npm start
+
+volumes:
+  mysql_data:
+  mongo_data:

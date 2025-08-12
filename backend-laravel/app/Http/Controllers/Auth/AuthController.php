@@ -20,8 +20,8 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name","email","password"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="name", type="string", example="Test User"),
+     *             @OA\Property(property="email", type="string", format="email", example="test@gmail.com"),
      *             @OA\Property(property="password", type="string", format="password", example="secret123")
      *         )
      *     ),
@@ -64,7 +64,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             @OA\Property(property="email", type="string", format="email", example="test@gmail.com"),
      *             @OA\Property(property="password", type="string", format="password", example="secret123")
      *         )
      *     ),
@@ -75,8 +75,8 @@ class AuthController extends Controller
      *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhb..."),
      *             @OA\Property(property="user", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", format="email", example="john@example.com")
+     *                 @OA\Property(property="name", type="string", example="Test User"),
+     *                 @OA\Property(property="email", type="string", format="email", example="test@gmail.com")
      *             )
      *         )
      *     ),
@@ -104,6 +104,40 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        ], 200);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/logout",
+     *     summary="Logout authenticated user",
+     *     tags={"Authentication"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successfully logged out",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Logged out successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        return response()->json(['message' => 'Logged out successfully'], 200);
+    }
 }
